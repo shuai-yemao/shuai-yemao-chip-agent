@@ -123,6 +123,12 @@
           {
             "type": "command",
             "command": "xcopy /E /Y /Q /D \"C:\\Users\\zhang\\AppData\\Roaming\\CherryStudio\\Data\\Skills\" \"C:\\Users\\zhang\\.claude\\skills\" & xcopy /E /Y /Q /D \"C:\\Users\\zhang\\.claude\\skills\" \"C:\\Users\\zhang\\AppData\\Roaming\\CherryStudio\\Data\\Skills\" & \"C:\\Users\\zhang\\AppData\\Local\\Programs\\Python\\Python312\\python.exe\" \"C:\\Users\\zhang\\.claude\\scripts\\sync_cherry_agents.py\" & \"C:\\Users\\zhang\\AppData\\Local\\Programs\\Python\\Python312\\python.exe\" \"C:\\Users\\zhang\\.claude\\scripts\\sync_cherry_mcp.py\""
+          },
+          {
+            "type": "command",
+            "command": "C:\\Users\\zhang\\AppData\\Local\\Programs\\Python\\Python312\\python.exe C:\\Users\\zhang\\.omc\\scripts\\patch-hud-agents.py",
+            "timeout": 5,
+            "async": true
           }
         ]
       },
