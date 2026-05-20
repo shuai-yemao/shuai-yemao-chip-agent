@@ -4,15 +4,18 @@
     "ANTHROPIC_DEFAULT_HAIKU_MODEL": "deepseek-v4-flash",
     "ANTHROPIC_DEFAULT_OPUS_MODEL": "deepseek-v4-pro[1m]",
     "ANTHROPIC_DEFAULT_SONNET_MODEL": "deepseek-v4-pro",
-    "ANTHROPIC_MODEL": "deepseek-v4-pro[1m]",
+    "ANTHROPIC_MODEL": "deepseek-v4-pro",
     "CLAUDE_CODE_SUBAGENT_MODEL": "deepseek-v4-pro",
     "MAX_THINKING_TOKENS": "31999",
     "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "64000",
-    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "0",
     "LANG": "zh_CN.UTF-8",
     "LC_ALL": "zh_CN.UTF-8",
     "PATH": "/c/msys64/usr/bin;/c/Users/zhang/.local/share/fnm;/c/Users/zhang/AppData/Roaming/fnm/node-versions/v22.22.2/installation;/c/Users/zhang/AppData/Roaming/fnm/node-versions/v22.22.2;$PATH",
     "EDITOR": "code --wait",
+    "ALL_PROXY": "socks5h://127.0.0.1:7897",
+    "DOCKER_EXE": "C:\\Program Files\\Docker\\Docker\\resources\\bin\\docker.exe",
+    "OMC_SANDBOX_IMAGE": "omc-sandbox:latest",
     "DISABLE_NON_ESSENTIAL_MODEL_CALLS": "1",
     "CLAUDE_CODE_SKIP_UPDATE_CHECK": "1"
   },
@@ -100,10 +103,10 @@
     }
   },
   "spinnerTipsEnabled": false,
-  "alwaysThinkingEnabled": true,
+  "alwaysThinkingEnabled": false,
   "showThinkingSummaries": true,
   "showTurnDuration": true,
-  "teammateMode": "tmux",
+  "teammateMode": "auto",
   "enableAllProjectMcpServers": true,
   "hooks": {
     "PostToolUse": [
@@ -145,7 +148,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "xcopy /E /Y /Q /D \"C:\\Users\\zhang\\AppData\\Roaming\\CherryStudio\\Data\\Skills\" \"C:\\Users\\zhang\\.claude\\skills\" & xcopy /E /Y /Q /D \"C:\\Users\\zhang\\.claude\\skills\" \"C:\\Users\\zhang\\AppData\\Roaming\\CherryStudio\\Data\\Skills\" & \"C:\\Users\\zhang\\AppData\\Local\\Programs\\Python\\Python312\\python.exe\" \"C:\\Users\\zhang\\.claude\\scripts\\sync_cherry_agents.py\" & \"C:\\Users\\zhang\\AppData\\Local\\Programs\\Python\\Python312\\python.exe\" \"C:\\Users\\zhang\\.claude\\scripts\\sync_cherry_mcp.py\""
+            "command": "xcopy /E /Y /Q /D \"C:\\Users\\zhang\\AppData\\Roaming\\CherryStudio\\Data\\Skills\" \"C:\\Users\\zhang\\.claude\\skills\" & xcopy /E /Y /Q /D \"C:\\Users\\zhang\\.claude\\skills\" \"C:\\Users\\zhang\\AppData\\Roaming\\CherryStudio\\Data\\Skills\" & \"C:\\Users\\zhang\\AppData\\Local\\Programs\\Python\\Python312\\python.exe\" \"C:\\Users\\zhang\\.claude\\scripts\\sync_cherry_agents.py\" & \"C:\\Users\\zhang\\AppData\\Local\\Programs\\Python\\Python312\\python.exe\" \"C:\\Users\\zhang\\.claude\\scripts\\enrich_agents.py\" & \"C:\\Users\\zhang\\AppData\\Local\\Programs\\Python\\Python312\\python.exe\" \"C:\\Users\\zhang\\.claude\\scripts\\sync_cherry_mcp.py\""
           },
           {
             "type": "command",
