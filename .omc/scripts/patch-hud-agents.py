@@ -34,7 +34,7 @@ def patch_agent_codes(content):
     // CHERRY STUDIO AGENTS
     // ============================================================
     'cherryclaw-embedded': 'Eb',
-    'cherryclaw-learner': 'Ln',
+    'cherryclaw-learner': 'Le',
     'doc-handler': 'Dh',
     %s
 """
