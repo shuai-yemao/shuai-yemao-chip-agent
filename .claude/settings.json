@@ -13,7 +13,8 @@
     "LC_ALL": "zh_CN.UTF-8",
     "PATH": "/c/msys64/usr/bin;/c/Users/zhang/.local/share/fnm;/c/Users/zhang/AppData/Roaming/fnm/node-versions/v22.22.2/installation;/c/Users/zhang/AppData/Roaming/fnm/node-versions/v22.22.2;$PATH",
     "EDITOR": "code --wait",
-    "DISABLE_NON_ESSENTIAL_MODEL_CALLS": "1"
+    "DISABLE_NON_ESSENTIAL_MODEL_CALLS": "1",
+    "CLAUDE_CODE_SKIP_UPDATE_CHECK": "1"
   },
   "includeCoAuthoredBy": false,
   "permissions": {
@@ -114,6 +115,28 @@
             "command": "\"C:\\Users\\zhang\\AppData\\Local\\Programs\\Python\\Python312\\python.exe\" \"C:\\Users\\zhang\\.claude\\scripts\\error_translate_hook.py\""
           }
         ]
+      },
+      {
+        "matcher": "PushNotification",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:\\Users\\zhang\\.omc\\scripts\\play-notification-sound.ps1 -Type info",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:\\Users\\zhang\\.omc\\scripts\\play-notification-sound.ps1 -Type complete",
+            "async": true
+          }
+        ]
       }
     ],
     "SessionStart": [
@@ -142,6 +165,16 @@
             "async": true
           }
         ]
+      },
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:\\Users\\zhang\\.omc\\scripts\\daily-backup.ps1",
+            "async": true
+          }
+        ]
       }
     ],
     "PreToolUse": [
@@ -163,11 +196,15 @@
     "command": "node C:/Users/zhang/.claude/hud/omc-hud.mjs"
   },
   "omcHud": {
-    "preset": "focused",
+    "preset": "full",
     "locale": "zh-CN",
     "elements": {
       "agentsFormat": "descriptions",
-      "showLastTool": true
+      "showLastTool": true,
+      "todos": true,
+      "backgroundTasks": true,
+      "contextBar": true,
+      "sessionHealth": true
     }
   },
   "omcExperiments": {

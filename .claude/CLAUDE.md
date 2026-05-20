@@ -13,6 +13,116 @@ Coordinate specialized agents, tools, and skills so work is completed accurately
 - Consult official docs before implementing with SDKs/frameworks/APIs.
 </operating_principles>
 
+<token_optimization>
+## Token 优化策略 —— 全局生效
+
+所有 Agent 必须遵守以下节省 token 的规则。token 就是成本，精简就是效率。
+
+### 文件读取
+- 搜索代码结构 → 用 `smart-explore`（AST 解析），不要直接 `Read` 全文件
+- 读已知位置 → 用 `Read(offset=N, limit=M)` 只读需要的行
+- 读大文件（>500行）→ 先 `Read(limit=50)` 看头部，再决定是否继续
+- 禁止 `cat` / `head` / `tail` 读文件 → 用 `Read` 工具（token 消耗更低）
+
+### 网页内容
+- 任何网页 → 优先 `defuddle`（去除导航/广告，节省 60-80% token）
+- 博客/文章/文档 → 可用 `r.jina.ai/{url}` 再省一层
+- `WebFetch` 仅用于需要 JS 渲染或 defuddle 失败的页面
+- 子 Agent 并行抓取 → 摘要回主 Agent，原始内容不入主上下文
+
+### 文档转换
+- PDF/Word/PPT → 先用 `markitdown` 转 Markdown，再读取
+- 直接读原始 PDF → 浪费大量 token 在格式噪音上
+
+### 脚本执行
+- `.claude/skills/*/scripts/` 下的脚本 → **只运行不阅读**
+- 先 `--help` 看用法，直接传参执行
+- 一个脚本可能几千行，读进上下文 = 浪费
+
+### 输出控制
+- 工具返回内容超 300 行 → 自动截断，只保留关键部分
+- bash 输出 → 用 `| tail -20` 或 `2>&1 | grep` 过滤
+- 文件写入 → 用 `Edit`（只传 diff），不要用 `Write` 重写整个文件
+
+### 上下文管理
+- 子 Agent 承担独立工作 → 结果以摘要返回，不入主上下文
+- 长对话 → 每 30 轮提醒用户"是否需要我总结前面的进展以释放上下文"
+- Skill 文件大型（>5KB）→ 只加载触发关键词匹配到的，不预加载全部
+
+### 优先级速查
+```
+网页内容?  → defuddle (不用 WebFetch)
+读代码?    → smart-explore 先搜结构，Read offset/limit 定位
+文档输入?  → markitdown 转 MD
+跑脚本?    → 直接运行，不读源码
+大文件?    → Read(limit=N) 逐步读
+并行搜索?  → 子Agent 抓，摘要回传
+```
+</token_optimization>
+
+<notifications>
+## 通知系统 —— 四层推送 + 音效反馈
+
+Agent 在以下节点自动触发多层通知。你不用盯着屏幕。
+
+### 通知触发规则
+
+| 事件 | PushNotification | HUD | 音效 |
+|------|:---:|:---:|:---:|
+| **所有 Task 完成** | Y | 绿色 | tada.wav |
+| **需要 CEO 审批** (Danger Zone) | Y + 暂停 | 闪烁 | Exclamation |
+| **Agent 阻塞** (retry耗尽) | Y | 红色 | Critical Stop |
+| **Quality Gate 未通过** (ERROR>0) | Y | 红色 | Error |
+| **Code Review 发现 P0** | Y | 红色 | Critical Stop |
+| **CP2 DISPUTED** (信息矛盾) | Y + 暂停 | 红色 | Error |
+| **/run --auto 流水线完成** | Y | 绿色 | chimes.wav |
+| **会话结束** (Stop hook) | — | — | tada.wav |
+
+### 四层通知架构
+
+```
+层1: 对话内醒目文本 (始终可见)
+  [OK] 3个任务全部完成
+  [!] 需要审批: 烧录固件 — 不可逆操作 — 确认? (y/n)
+
+层2: HUD 状态栏 (终端底部常驻)
+  todos:3/5 | agents:2 | bg:1/3 | ctx:67%
+  全部完成 → todos 变绿
+
+层3: 桌面 PushNotification (切走终端时)
+  终端聚焦时自动抑制，切走后弹出桌面通知
+  无需外部平台 (Telegram/Discord/Slack)
+
+层4: 系统音效 (实时反馈, 已落地)
+  PostToolUse hook 匹配 PushNotification → 播放对应 Windows 系统音效
+  Stop hook → 播放会话结束音效
+  脚本: .omc/scripts/play-notification-sound.ps1
+  音源: C:\Windows\Media\*.wav
+```
+
+HUD 已配置为 `full` 预设，音效通过 settings.json hooks 自动触发。
+
+
+
+### PushNotification 消息模板
+
+```
+完成: "N个任务全部完成 — {简述}"
+审批: "需要确认: {操作} — {风险说明}"
+阻塞: "Agent {名称} 阻塞于 Task #{id} — {原因}"
+未通过: "Quality Gate 未通过 — {Stage} 发现 {N} 个 ERROR"
+P0审查: "Code Review 发现 {N} 个 P0 阻塞问题"
+流水线: "/run {workflow_name} 完成 — {通过|未通过}"
+```
+
+### 审批请求格式
+当需要审批时，Agent 必须：
+1. PushNotification（含操作和风险）
+2. 播放警告音
+3. 在对话中展示：`[!] 需要审批: {具体操作} — {风险说明} — 确认? (y/n)`
+4. 等待 CEO 明确回复后才继续
+</notifications>
+
 <agent_core_workflow>
 ## Agent 核心工作流 —— 提问优化 + 信息收集（全自动）
 
@@ -86,6 +196,51 @@ Coordinate specialized agents, tools, and skills so work is completed accurately
 - 优化和收集的结果通过 Task 的 description 字段传递给下游 Agent
 </agent_core_workflow>
 
+<autonomy_level>
+## 自主级别 (Autonomy Level)
+
+用户用 `/auto L1|L2|L3` 一键切换。不指定时默认 L2。
+
+### 三级定义
+
+| 级别 | 名称 | 行为 | 适用场景 |
+|------|------|------|---------|
+| **L1** | 保守 | 每步确认：优化后确认 + CP1-4全暂停 + Task拆分确认 + 审查不跳过 | 新领域、高风险操作、学习模式 |
+| **L2** | 均衡 (默认) | 关键确认：优化后确认 + CP3/4暂停 + Task拆分确认 + 危险操作锚点 + P0审查阻塞 | 日常开发 |
+| **L3** | 通知 | 只暂停危险操作：烧录/force-push/rm 仍暂停，其余自动执行完成后通知 | 信任的重复任务、/run 模板 |
+
+### 各确认点在三级下的行为
+
+| 确认点 | L1 保守 | L2 均衡 (默认) | L3 通知 |
+|--------|---------|---------------|---------|
+| ai-prompting 优化后确认 | 总是确认 | 总是确认 | 静默采用优化版，事后展示 |
+| agent-research CP1 (UNCERTAIN) | 暂停确认 | 标注后自动通过 | 标注后自动通过 |
+| agent-research CP2 (DISPUTED) | 暂停确认 | 暂停确认 | 标注后自动通过，事后提醒 |
+| agent-research CP3 (导入未验证) | 暂停确认 | 暂停确认 | 自动导入+标记[待验证] |
+| agent-research CP4 (领域未配置) | 暂停确认 | 暂停确认 | 自动fallback general+标注 |
+| CEO拆分Task | 每任务确认 | 展示计划，一次性确认 | 自动拆分，事后通知 |
+| Danger Zone (烧录/push -f/rm) | 暂停确认 | 暂停确认 | 暂停确认（不可绕过） |
+| Retry 耗尽 | 暂停确认 | 暂停确认 | 自动标记blocked+通知 |
+| Quality Gate ERROR>0 | 暂停确认 | 自动修复+重跑1次 | 自动修复+重跑2次 |
+| Code Review P0 | 暂停确认 | 暂停确认 | 自动标注+生成修复建议 |
+
+### 切换命令
+```
+/auto      → 显示当前级别
+/auto L1   → 保守模式
+/auto L2   → 均衡模式（默认）
+/auto L3   → 通知模式（无人值守）
+```
+
+### L3 安全底线（不可绕过）
+即使在 L3 全自动模式下，以下操作仍暂停确认：
+- 固件烧录 (flash/openocd/jlink)
+- Git force push
+- 文件删除 (rm)
+- 量产操作
+- 涉及 `.claude/settings.json` 的修改
+</autonomy_level>
+
 <delegation_rules>
 ### 三层路由（新版）
 参照 `<agent_company_architecture>` 的能力矩阵和路由规则，按以下优先级分配：
@@ -122,6 +277,58 @@ Coordinate specialized agents, tools, and skills so work is completed accurately
 
 Direct writes OK for: `~/.claude/**`, `.omc/**`, `.claude/**`, `CLAUDE.md`, `AGENTS.md`.
 </model_routing>
+
+<task_dispatch>
+## 任务类型路由 + 分级执行策略
+
+模型路由决定"谁来做"，任务路由决定"怎么做"。
+
+### 任务类型分类（确定性规则，零延迟）
+
+```
+用户任务
+  │
+  ├─ 含 "构建/build/编译" 且不含 "修复/fix"
+  │   → type: build-test, mode: run-then-report
+  │
+  ├─ 含 "修复/fix/修bug/改bug"
+  │   → type: fix, 按严重度细分:
+  │       · 单文件+<5行+纯格式/lint → severity: simple
+  │       · 多文件+≥5行+逻辑变更 → severity: complex
+  │       · 含构建/配置/依赖变更 → severity: environment
+  │
+  ├─ 含 "审查/review/检查代码"
+  │   → type: code-review
+  │
+  ├─ 含 "批量/全部/所有文件 整理/格式化/lint"
+  │   → type: batch-process
+  │
+  ├─ 含 "测试/test/验证"
+  │   → type: test
+  │
+  ├─ 含 "部署/deploy/发布/release"
+  │   → type: deploy
+  │
+  └─ 不匹配 → type: general, 按 `<query_complexity>` 路由
+```
+
+### 分级执行策略
+
+| 严重度 | 判定标准 | 执行策略 |
+|--------|---------|---------|
+| **simple** | 单文件 + <5行 + 格式化/lint/拼写 | 自动修复 + 自动提交 (`git commit -m "auto: [描述]"`) |
+| **complex** | 多文件 / ≥5行 / 逻辑变更 | 修复后生成 PR 等人审 (`gh pr create`) |
+| **environment** | 构建失败/依赖缺失/配置错误 | 停止 + 通知用户 (`PushNotification`) |
+
+### 错误恢复策略（覆盖 `<fault_recovery>` 的通用重试）
+
+| 失败类型 | 处理 | 重试 |
+|---------|------|------|
+| 构建失败 (build error) | 立即停止 + 通知 | 0 次（环境问题，重试无意义） |
+| 测试失败 (test fail) | 分析 → 自动修复 → 重测 | 最多 3 次 |
+| 部署失败 (deploy fail) | 等待 30s → 重试 | 最多 3 次 |
+| 规则匹配失败 | 降级到 AI 手动判断 | N/A |
+</task_dispatch>
 
 <query_complexity>
 ## 问题复杂度分级（Hybrid 级联判断）
@@ -218,6 +425,71 @@ Before concluding: zero pending tasks, tests passing, verifier evidence collecte
 **Pre-flight (强制)**: 每个 Agent 开始工作前，先执行 `<agent_core_workflow>` 的提问优化 + 信息收集流程。
 </execution_protocols>
 
+<quality_gate>
+## 质量门 (P1) —— 构建后自动流水线
+
+代码变更后自动执行：静态分析 → 单元测试 → 内存分析。三个步骤串行，前一步不通过则后续不执行。
+
+### 触发条件
+- 任何 `.c/.h/.cpp/.hpp` 文件被修改或新建
+- 用户说"检查代码""跑测试""质量门""CI"
+- Agent 完成一轮代码修改后自动触发
+
+### 流水线
+
+```
+代码变更完成
+  │
+  ├─ Stage 1: static-analysis (cppcheck)
+  │   │ 扫描未定义行为、空指针、数组越界、内存泄漏
+  │   │
+  │   ├─ ERROR > 0? → ❌ 阻塞，修复后重跑
+  │   │
+  │   └─ ERROR = 0? → ✅ 进入 Stage 2
+  │
+  ├─ Stage 2: unit-test (Unity/CppUTest)
+  │   │ 在主机端运行单元测试（无需硬件）
+  │   │
+  │   ├─ FAIL > 0? → 输出失败详情，修复后重跑
+  │   │
+  │   └─ ALL PASS? → ✅ 进入 Stage 3
+  │
+  └─ Stage 3: map-analyzer
+      │ 解析 .map 文件，检查 Flash/RAM 使用率
+      │
+      ├─ 使用率 > 90%? → ❌ 阻塞，必须优化
+      ├─ 使用率 > 80%? → ⚠ 警告，建议优化
+      └─ 使用率 < 80%? → ✅ 通过
+```
+
+### 快速模式（仅静态分析）
+当时间有限时，CEO 可以指定只跑 Stage 1：
+```
+"快速检查一下代码" → 只触发 static-analysis
+```
+
+### 嵌入式附加检查
+嵌入式 C 项目在 Stage 1 后自动追加：
+- **MISRA 检查**：`cppcheck --addon=misra`（如果工程有 `misra.json` 配置）
+- **编码规范**：`lixin-c-coding-standard-zh` 检查命名/注释/大括号风格
+
+### 跳过条件
+- 纯文档/配置变更（无 `.c/.h` 修改）
+- 用户明确说"跳过检查""不用检查"
+- 快速原型阶段（用户声明"原型代码"）
+
+### 输出格式
+```
+═══════════ 质量门报告 ════════════
+Stage 1: 静态分析  ✅ ERROR:0 WARNING:3
+Stage 2: 单元测试  ✅ 5/5 PASS
+Stage 3: 内存分析  ⚠ Flash:82% RAM:45%
+
+结论: ⚠ 条件通过 (Flash > 80%，建议优化)
+════════════════════════════════════
+```
+</quality_gate>
+
 <checkpoint_system>
 ## 检查点系统 (P0)
 
@@ -268,7 +540,10 @@ SessionStart: 读取各 journal 最后一行 → `in_progress` 任务提示 CEO 
 ```
 
 ### 触发方式
-- `/run firmware-release` — 严格按模板步骤执行
+- `/run firmware-release` — 严格按模板步骤执行（L2 均衡模式）
+- `/run firmware-release --auto` — 全自动无人值守（L3 通知模式）
+  只暂停：`approval: required` 的步骤 + danger-zone 操作
+  其余步骤自动执行，完成后输出汇总通知
 - `/run firmware-release skip:static-analysis` — 跳过某步骤
 - `/run firmware-release agent:build=oh-my-claudecode:architect` — 覆盖某步骤的执行 Agent
 - 自然语言描述 — 无匹配模板时，CEO 手动拆解任务
@@ -298,6 +573,12 @@ steps:
 3. 按 `<agent_direct_comm>` 中的规则派遣 Agent，Agent 间通过 SendMessage 通知
 4. `approval: required` 的步骤到达时，Agent 暂停等待 CEO 确认（参考 `<checkpoint_system>` 锚点机制）
 5. 自然语言覆盖项合并到模板参数中——模板是默认起点，不是强制路径
+6. `--auto` 模式额外行为：
+   - CEO 解析 YAML 后自动创建全部 Task，不询问确认
+   - 所有 `depends_on` 依赖自动解除阻塞（无需 CEO 手动调度）
+   - `approval: required` 的步骤到达时正常暂停（这是唯一会停的点）
+   - 任一步骤失败 → 后续步骤自动跳过 → 最终汇总通知 CEO
+   - 全部完成 → PushNotification 通知 "workflow {name} 完成"
 </workflow_templates>
 
 <observability>
@@ -324,6 +605,14 @@ retry_count < 2 → 重试（更新检查点 retry_count，分析原因，换策
 retry_count >= 2 → 写失败报告到 traces/failures/，SendMessage 通知 CEO，任务 → blocked，释放
 
 详细执行循环见 `<agent_company_architecture>` Agent 标准执行循环。
+
+### 与任务分级策略联动
+通用重试（最多2次）适用于 `general` 类型任务。特定任务类型有专属重试策略，见 `<task_dispatch>` 错误恢复表：
+- 构建失败 → 0 次重试（环境问题）
+- 测试失败 → 最多 3 次（可自动修复）
+- 部署失败 → 最多 3 次（等30s后重试）
+
+当任务被 `<task_dispatch>` 分类后，使用其专属策略覆盖本节的通用策略。
 </fault_recovery>
 
 <hooks_and_context>
