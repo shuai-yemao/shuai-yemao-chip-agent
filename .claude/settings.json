@@ -169,5 +169,15 @@
       "agentsFormat": "descriptions",
       "showLastTool": true
     }
+  },
+  "omcExperiments": {
+    "patch-hud-agents": true,
+    "session-feedback": true,
+    "env-check": true,
+    "weekly-report": true,
+    "naming-v2": true,
+    "runtime-verify": false,
+    "auto-compact-feedback": false,
+    "self-review-guard": false
   }
 }

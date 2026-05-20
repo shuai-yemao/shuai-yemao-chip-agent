@@ -1,84 +1,75 @@
 """
 SessionStart hook: 读取上轮 session 的执行度量并注入上下文。
-从 .omc/sessions/ 读最新 session 指标，输出给 StatusLine stdin。
+集成 experiments.py 和 routing-feedback.py，输出路由建议 + 激活实验。
 """
-import json, os, sys, glob
+import json, os, sys, glob, subprocess
 
-SESSIONS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "sessions")
-REPLAY_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "state")
-MAX_FEEDBACK = 5  # 最多查最近 N 个 session
+SCRIPTS_DIR = os.path.dirname(os.path.abspath(__file__))
+OMC_DIR = os.path.dirname(SCRIPTS_DIR)
+SESSIONS_DIR = os.path.join(OMC_DIR, "sessions")
+REPLAY_DIR = os.path.join(OMC_DIR, "state")
+PYTHON = os.path.expanduser(r"~\AppData\Local\Programs\Python\Python312\python.exe")
 
-def load_last_sessions():
-    """加载最近 session 指标"""
-    if not os.path.isdir(SESSIONS_DIR):
-        return []
-    files = sorted(glob.glob(os.path.join(SESSIONS_DIR, "*.json")), key=os.path.getmtime, reverse=True)
-    sessions = []
-    for f in files[:MAX_FEEDBACK]:
-        try:
-            with open(f) as fh:
-                data = json.load(fh)
-                data["_file"] = os.path.basename(f)
-                sessions.append(data)
-        except Exception:
-            continue
-    return sessions
+def run_module(script_name, *args):
+    """运行同目录脚本并返回输出"""
+    path = os.path.join(SCRIPTS_DIR, script_name)
+    try:
+        r = subprocess.run([PYTHON, path] + list(args), capture_output=True, text=True, timeout=5)
+        return r.stdout.strip() if r.returncode == 0 else None
+    except Exception:
+        return None
 
 def load_replay_summary():
     """从 replay JSONL 提取摘要"""
     if not os.path.isdir(REPLAY_DIR):
         return None
-    replays = sorted(glob.glob(os.path.join(REPLAY_DIR, "agent-replay-*.jsonl")), key=os.path.getmtime, reverse=True)
+    replays = sorted(glob.glob(os.path.join(REPLAY_DIR, "agent-replay-*.jsonl")),
+                     key=os.path.getmtime, reverse=True)
     if not replays:
         return None
     try:
         with open(replays[0]) as f:
             lines = f.readlines()
         agents = set()
-        tools = set()
         errors = 0
-        for line in lines[-500:]:  # 最近 500 行
+        for line in lines[-500:]:
             try:
                 evt = json.loads(line)
                 if evt.get("type") == "agent_start":
                     agents.add(evt.get("agent_type", "?"))
-                elif evt.get("type") == "tool_start":
-                    tools.add(evt.get("tool_name", "?"))
                 elif evt.get("type") in ("error", "intervention"):
                     errors += 1
             except Exception:
                 continue
-        return {
-            "unique_agents": len(agents),
-            "agent_types": list(agents),
-            "unique_tools": len(tools),
-            "errors_or_interventions": errors
-        }
+        return {"unique_agents": len(agents), "errors": errors}
     except Exception:
         return None
 
 def main():
-    sessions = load_last_sessions()
     replay = load_replay_summary()
 
-    feedback = {
-        "type": "session_feedback",
-        "last_sessions": len(sessions),
-        "latest": sessions[0] if sessions else None,
-        "replay": replay
-    }
-
-    # 输出纯文本给 statusline stdin (OMC 会解析)
     parts = []
-    if sessions:
-        latest = sessions[0]
-        parts.append(f"上次session: {latest.get('sessionId','?')[:8]}")
-    if replay:
-        parts.append(f"agents:{replay['unique_agents']} tools:{replay['unique_tools']}")
-        if replay['errors_or_interventions'] > 0:
-            parts.append(f"[!]{replay['errors_or_interventions']}次干预")
 
-    print(" | ".join(parts) if parts else "首轮session")
+    # 1. Session 摘要
+    if replay:
+        parts.append(f"上轮: {replay['unique_agents']} agents")
+        if replay['errors'] > 0:
+            parts.append(f"{replay['errors']}次干预")
+
+    # 2. 激活的实验
+    experiments = run_module("experiments.py")
+    if experiments and "none" not in experiments:
+        parts.append(experiments)
+
+    # 3. 路由建议 (基于 replay 数据)
+    routing = run_module("routing-feedback.py")
+    if routing and "无调整" not in routing and "数据不足" not in routing:
+        parts.append(routing)
+
+    if parts:
+        print(" | ".join(parts))
+    else:
+        print("OMC ready")
 
 if __name__ == "__main__":
     main()

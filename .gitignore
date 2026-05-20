@@ -1,0 +1,18 @@
+# Ignore everything by default
+/*
+# Whitelist gitignore itself
+!/.gitignore
+
+# Whitelist Claude config
+!/.claude/
+/.claude/*
+!/.claude/CLAUDE.md
+!/.claude/settings.json
+!/.claude/plans/
+!/.claude/plans/*.md
+
+# Whitelist OMC runtime
+!/.omc/
+/.omc/*
+!/.omc/scripts/
+!/.omc/tests/
