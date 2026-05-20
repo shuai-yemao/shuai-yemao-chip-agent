@@ -1,0 +1,167 @@
+{
+  "env": {
+    "ANTHROPIC_BASE_URL": "https://api.deepseek.com/anthropic",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "deepseek-v4-flash",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "deepseek-v4-pro[1m]",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "deepseek-v4-pro",
+    "ANTHROPIC_MODEL": "deepseek-v4-pro[1m]",
+    "CLAUDE_CODE_SUBAGENT_MODEL": "deepseek-v4-pro",
+    "MAX_THINKING_TOKENS": "31999",
+    "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "64000",
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
+    "LANG": "zh_CN.UTF-8",
+    "LC_ALL": "zh_CN.UTF-8",
+    "PATH": "/c/msys64/usr/bin;/c/Users/zhang/.local/share/fnm;/c/Users/zhang/AppData/Roaming/fnm/node-versions/v22.22.2/installation;/c/Users/zhang/AppData/Roaming/fnm/node-versions/v22.22.2;$PATH",
+    "EDITOR": "code --wait",
+    "DISABLE_NON_ESSENTIAL_MODEL_CALLS": "1"
+  },
+  "includeCoAuthoredBy": false,
+  "permissions": {
+    "allow": [
+      "Read(*)",
+      "Edit(*)",
+      "Write(*)",
+      "Glob(*)",
+      "Grep(*)",
+      "Bash(*)",
+      "MCP(*)",
+      "Agent(*)",
+      "Skill(*)",
+      "WebSearch",
+      "WebFetch",
+      "TaskCreate(*)",
+      "TaskUpdate(*)",
+      "TaskList(*)",
+      "TaskGet(*)",
+      "TaskOutput(*)",
+      "TaskStop(*)",
+      "SendMessage(*)",
+      "Monitor(*)",
+      "ScheduleWakeup(*)",
+      "CronCreate(*)",
+      "CronList(*)",
+      "CronDelete(*)",
+      "PushNotification(*)",
+      "EnterPlanMode",
+      "ExitPlanMode",
+      "EnterWorktree",
+      "ExitWorktree",
+      "AskUserQuestion(*)"
+    ],
+    "deny": [
+      "Bash(rm *)",
+      "Bash(*rm -rf *)",
+      "Bash(*rmdir *)",
+      "Bash(*del *)",
+      "Bash(*git clean *)",
+      "Bash(git push --force *)",
+      "Bash(* > /dev/*)",
+      "Bash(*openocd*filesystem*)",
+      "Bash(*jlink*download*)",
+      "Bash(*st-flash*write*)",
+      "Bash(*st-flash*erase*)",
+      "Bash(*esptool*write_flash*)",
+      "Bash(*espefuse*)",
+      "Bash(*dfu-util*download*)",
+      "Bash(*nrfjprog*program*)",
+      "Edit(C:/Users/zhang/.claude/settings.json)",
+      "Edit(C:/Users/zhang/.claude/.claude.json)",
+      "Write(C:/Users/zhang/.claude/settings.json)",
+      "Write(C:/Users/zhang/.claude/.claude.json)",
+      "Edit(C:/Windows/*)",
+      "Write(C:/Windows/*)",
+      "Edit(*/System32/*)",
+      "Write(*/System32/*)"
+    ],
+    "defaultMode": "acceptEdits"
+  },
+  "enabledPlugins": {
+    "claude-mem@thedotmack": true
+  },
+  "extraKnownMarketplaces": {
+    "anthropic-agent-skills": {
+      "source": {
+        "source": "github",
+        "repo": "anthropics/skills"
+      }
+    },
+    "thedotmack": {
+      "source": {
+        "source": "github",
+        "repo": "thedotmack/claude-mem"
+      }
+    },
+    "omc": {
+      "source": {
+        "source": "git",
+        "url": "https://github.com/Yeachan-Heo/oh-my-claudecode.git"
+      }
+    }
+  },
+  "spinnerTipsEnabled": false,
+  "alwaysThinkingEnabled": true,
+  "showThinkingSummaries": true,
+  "showTurnDuration": true,
+  "teammateMode": "tmux",
+  "enableAllProjectMcpServers": true,
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"C:\\Users\\zhang\\AppData\\Local\\Programs\\Python\\Python312\\python.exe\" \"C:\\Users\\zhang\\.claude\\scripts\\error_translate_hook.py\""
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "xcopy /E /Y /Q /D \"C:\\Users\\zhang\\AppData\\Roaming\\CherryStudio\\Data\\Skills\" \"C:\\Users\\zhang\\.claude\\skills\" & xcopy /E /Y /Q /D \"C:\\Users\\zhang\\.claude\\skills\" \"C:\\Users\\zhang\\AppData\\Roaming\\CherryStudio\\Data\\Skills\" & \"C:\\Users\\zhang\\AppData\\Local\\Programs\\Python\\Python312\\python.exe\" \"C:\\Users\\zhang\\.claude\\scripts\\sync_cherry_agents.py\" & \"C:\\Users\\zhang\\AppData\\Local\\Programs\\Python\\Python312\\python.exe\" \"C:\\Users\\zhang\\.claude\\scripts\\sync_cherry_mcp.py\""
+          }
+        ]
+      },
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "C:\\Users\\zhang\\AppData\\Local\\Programs\\Python\\Python312\\python.exe C:\\Users\\zhang\\.omc\\scripts\\session-feedback.py",
+            "shell": "powershell",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File C:\\Users\\zhang\\.omc\\scripts\\env-check.ps1",
+            "timeout": 10,
+            "async": true
+          }
+        ]
+      }
+    ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "node C:/Users/zhang/.claude/hud/omc-hud.mjs"
+  },
+  "omcHud": {
+    "preset": "focused",
+    "locale": "zh-CN",
+    "elements": {
+      "agentsFormat": "descriptions",
+      "showLastTool": true
+    }
+  }
+}
