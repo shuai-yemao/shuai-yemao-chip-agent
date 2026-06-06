@@ -4,6 +4,10 @@ SessionStart hook: 读取上轮 session 的执行度量并注入上下文。
 """
 import json, os, sys, glob, subprocess
 
+if sys.platform == "win32":
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 SCRIPTS_DIR = os.path.dirname(os.path.abspath(__file__))
 OMC_DIR = os.path.dirname(SCRIPTS_DIR)
 SESSIONS_DIR = os.path.join(OMC_DIR, "sessions")
@@ -13,8 +17,11 @@ PYTHON = os.path.expanduser(r"~\AppData\Local\Programs\Python\Python312\python.e
 def run_module(script_name, *args):
     """运行同目录脚本并返回输出"""
     path = os.path.join(SCRIPTS_DIR, script_name)
+    env = os.environ.copy()
+    env["PYTHONIOENCODING"] = "utf-8"
     try:
-        r = subprocess.run([PYTHON, path] + list(args), capture_output=True, text=True, timeout=5)
+        r = subprocess.run([PYTHON, path] + list(args), capture_output=True,
+                           text=True, encoding="utf-8", timeout=5, env=env)
         return r.stdout.strip() if r.returncode == 0 else None
     except Exception:
         return None
@@ -69,7 +76,7 @@ def main():
     if parts:
         print(" | ".join(parts))
     else:
-        print("OMC ready")
+        print("OMC就绪")
 
 if __name__ == "__main__":
     main()

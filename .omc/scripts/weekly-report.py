@@ -7,6 +7,10 @@ import json, os, sys, glob
 from datetime import datetime, timedelta
 from collections import defaultdict
 
+if sys.platform == "win32":
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 OMC_DIR = os.path.expanduser("~/.omc")
 SESSIONS_DIR = os.path.join(OMC_DIR, "sessions")
 STATE_DIR = os.path.join(OMC_DIR, "state")
@@ -152,16 +156,17 @@ def main():
     else:
         s = report["summary"]
         print(f"=== OMC 周度度量报告 ({report['generated_at'][:10]}) ===")
-        print(f"Sessions: {s['sessions']}  |  事件: {s['total_events']}  |  平均时长: {s['avg_duration_min']}min")
+        print(f"会话: {s['sessions']}  |  事件: {s['total_events']}  |  平均时长: {s['avg_duration_min']}分钟")
         print(f"自主度: {s['autonomy']}  |  干预: {s['interventions']}  |  技能: {s['skills_activated']}")
         if report["bottlenecks"]:
             print(f"\n瓶颈 Agent:")
             for b in report["bottlenecks"]:
-                print(f"  {b['agent']}: {b['errors']} errors")
+                print(f"  {b['agent']}: {b['errors']} 次错误")
         if report["recommendations"]:
             print(f"\n路由建议:")
             for r in report["recommendations"]:
-                print(f"  [{r['action']}] {r['agent_type']} — {r['reason']}")
+                action_cn = {"review": "审查", "investigate": "排查"}.get(r['action'], r['action'])
+                print(f"  [{action_cn}] {r['agent_type']} — {r['reason']}")
 
 if __name__ == "__main__":
     main()

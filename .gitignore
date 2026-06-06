@@ -6,8 +6,6 @@
 # Whitelist Claude config
 !/.claude/
 /.claude/*
-!/.claude/CLAUDE.md
-!/.claude/settings.json
 !/.claude/plans/
 !/.claude/plans/*.md
 

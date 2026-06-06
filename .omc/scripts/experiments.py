@@ -13,6 +13,10 @@ Canary 实验标志系统 (Phase 3)
 """
 import json, os, sys
 
+if sys.platform == "win32":
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 CONFIG_PATH = os.path.expanduser("~/.claude/settings.json")
 STATE_PATH = os.path.expanduser("~/.omc/state/experiments-state.json")
 
@@ -94,9 +98,9 @@ def main():
     # 默认：输出激活列表给 SessionStart 消费
     active = get_active()
     if active:
-        print(f"experiments: {', '.join(active)}")
+        print(f"实验: {', '.join(active)}")
     else:
-        print("experiments: none active")
+        print("实验: 无激活项")
 
 if __name__ == "__main__":
     main()

@@ -7,6 +7,10 @@
 import json, os, sys
 from collections import defaultdict
 
+if sys.platform == "win32":
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 # 将 weekly-report 作为模块导入（简化版：直接复制核心逻辑）
 OMC_DIR = os.path.expanduser("~/.omc")
 STATE_DIR = os.path.join(OMC_DIR, "state")
