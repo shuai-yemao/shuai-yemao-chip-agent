@@ -4,6 +4,22 @@
 
 ## Language
 
+**Agent 编排层 (Agent Orchestration Layer)**:
+接收需求对齐层输出的施工包，解析依赖图，分批派发 Agent 执行，通过三层门禁（AI 审查 → 用户验证 → 验收清单）管控质量。
+_Avoid_: 调度层、执行层
+
+**施工包 (Construction Package)**:
+需求对齐层输出的完整交付物，包含 PRD + 4 项施工清单 + Issue 清单。
+
+**依赖图 (Dependency Graph)**:
+从施工名单中推导的任务依赖关系 DAG，决定任务的执行批次和并行策略。
+
+**批次 (Batch)**:
+依赖图中同一深度、无相互依赖的任务集合，同一批次内可并行执行。
+
+**三层门禁 (Three-Layer Gate)**:
+编排层的质量管控模型：① AI 自动审查 ② 用户验证 ③ 验收测试清单确认。
+
 **需求对齐层 (Requirements Alignment Layer)**:
 将模糊需求转化为结构化方案文档和清单的系统层。
 _Avoid_: 需求层、QA 层
