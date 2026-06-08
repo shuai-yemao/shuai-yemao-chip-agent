@@ -144,10 +144,15 @@ for (let b = 0; b < batches.length; b++) {
       log(`  skills: ${skills}`)
 
       // 派发 Agent 执行
-      const result = await agent({
-        prompt: `执行任务: ${task.name}\n描述: ${task.description}\n文件: ${task.files.join(', ')}\n验收标准: ${(task.acceptance || []).join(', ')}`,
-        schema: EXECUTION_RESULT_SCHEMA,
-      })
+      const result = await agent(
+        `执行任务: ${task.name}\n描述: ${task.description}\n文件: ${task.files.join(', ')}\n验收标准: ${(task.acceptance || []).join(', ')}`,
+        { schema: EXECUTION_RESULT_SCHEMA }
+      )
+
+      // Agent 可能返回 null（API 错误或被用户跳过）
+      if (!result) {
+        return { result: { task_id: task.id, status: 'FAILED', summary: 'Agent 执行失败（API 错误）', error: 'subagent returned null' }, task }
+      }
 
       return { result, task }
     })
@@ -166,17 +171,21 @@ for (let b = 0; b < batches.length; b++) {
       log(`    自动重试...`)
 
       // 第 2 次重试
-      const retryResult = await agent({
-        prompt: `重试任务: ${task.name}\n描述: ${task.description}\n注意：上次失败原因: ${result.error}\n文件: ${task.files.join(', ')}`,
-        schema: EXECUTION_RESULT_SCHEMA,
-      })
+      const retryResult = await agent(
+        `重试任务: ${task.name}\n描述: ${task.description}\n注意：上次失败原因: ${result.error}\n文件: ${task.files.join(', ')}`,
+        { schema: EXECUTION_RESULT_SCHEMA }
+      )
 
-      if (retryResult.status === 'SUCCESS') {
+      if (!retryResult) {
+        log(`${task.name}: ❌ 重试也失败（API 错误）`)
+        failedTasks.push({ task, error: 'subagent returned null on retry' })
+        blockedTasks.push(task.id)
+      } else if (retryResult.status === 'SUCCESS') {
         log(`${task.name}: ✅ 重试成功`)
         allResults.push(retryResult)
       } else {
-        log(`${task.name}: ❌ 重试也失败 - ${retryResult.error}`)
-        failedTasks.push({ task, error: retryResult.error || result.error })
+        log(`${task.name}: ❌ 重试也失败 - ${retryResult.error || 'unknown'}`)
+        failedTasks.push({ task, error: retryResult.error || result.error || 'unknown' })
         blockedTasks.push(task.id)
       }
     }
@@ -195,12 +204,17 @@ phase('Step 3: 质量门禁')
 
 const reviewResults = []
 for (const r of allResults) {
-  const review = await agent({
-    prompt: `审查任务 ${r.task_id} 的完成结果:\n变更文件: ${(r.files_changed || []).join(', ')}\n测试结果: ${r.test_results || '无'}\n摘要: ${r.summary}\n\n检查：1) 代码正确性 2) 变更范围是否符合预期 3) 测试是否充分`,
-    schema: REVIEW_SCHEMA,
-  })
-  reviewResults.push(review)
-  log(`${r.task_id}: ${review.passed ? '✅ 审查通过' : '❌ 审查不通过'}`)
+  const review = await agent(
+    `审查任务 ${r.task_id} 的完成结果:\n变更文件: ${(r.files_changed || []).join(', ')}\n测试结果: ${r.test_results || '无'}\n摘要: ${r.summary}\n\n检查：1) 代码正确性 2) 变更范围是否符合预期 3) 测试是否充分`,
+    { schema: REVIEW_SCHEMA }
+  )
+  if (!review) {
+    log(`${r.task_id}: ⚠️ 审查跳过（API 错误）`)
+    reviewResults.push({ task_id: r.task_id, passed: false, issues: ['审查 agent 不可用'] })
+  } else {
+    reviewResults.push(review)
+    log(`${r.task_id}: ${review.passed ? '✅ 审查通过' : '❌ 审查不通过'}`)
+  }
 }
 
 // --- 验收确认 ---

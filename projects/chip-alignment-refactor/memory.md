@@ -55,6 +55,7 @@
 |------|------|------|
 | 项目目标 | [project-goal.md](.claude/memory/project-goal.md) | 重构四份配置文件的背景与目标 |
 | 架构决策 | [arch-decision.md](.claude/memory/arch-decision.md) | 文件结构、引用关系、职责划分 |
+| **会话检查点** | [session-checkpoint.md](.claude/memory/session-checkpoint.md) | **← 重启后先读这个** — settings 修复 + workflow 修复 + 待验证任务 |
 
 ### 知识图谱（Knowledge Graph）
 
@@ -147,6 +148,9 @@
 | 2026-06-08 | Agent 系统五层架构确定 | 需求对齐层优先构建，工具层贯通所有层 |
 | 2026-06-08 | 需求对齐层设计完成 | 使用 grill-me/grill-with-docs/to-prd/to-issues 等技能 |
 | 2026-06-08 | Agent 编排层设计完成 | 依赖图调度 + 并行分发 + 三层门禁 + 两次重试机制 |
+| 2026-06-08 | settings.json 按 DeepSeek 官方文档配置 | 移除 effortLevel + MAX_THINKING_TOKENS 以兼容 subagent，加 [1m] 后缀启 1M 上下文 |
+| 2026-06-08 | agent-orchestration.js agent() 调用修复 | 参数格式错误：传对象而非字符串 → [[object Object]] |
+| 2026-06-08 | 已知 Bug：DeepSeek reasoning_effort + thinking:disabled 互斥 | 等待 DeepSeek 修复 #1397 后启用 CLAUDE_CODE_EFFORT_LEVEL |
 
 ## 重构日志
 
@@ -164,6 +168,9 @@
   - [x] 需求对齐层设计完成（CONTEXT + UBIQUITOUS + ADR + 设计文档）
   - [x] Agent 编排层设计完成（DAG 调度 + 三层门禁 + 重试机制）
   - [x] 需求对齐层 + 编排层 workflow 脚本实现完成
+  - [ ] 重启后验证：settings 生效 + subagent 可运行
+  - [ ] 验证端到端链路（需求对齐层 → 编排层）
+  - [ ] 编排层完整运行（依赖图/并行分发/审查/验收）
 ```
 
 ## 参考链接
