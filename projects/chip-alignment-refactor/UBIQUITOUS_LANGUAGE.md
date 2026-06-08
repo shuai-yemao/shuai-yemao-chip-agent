@@ -56,20 +56,9 @@
 
 ## Skills 映射
 
-需求对齐层根据检测到的嵌入式关键词，自动关联以下 skills：
+所有关键词 → skill 映射统一管理在 [SKILL_REGISTRY.md](SKILL_REGISTRY.md)。
 
-| 领域 | 关键词 | 关联 Skill |
-|------|--------|-----------|
-| MCU 架构 | ARM Cortex, STM32, 芯片型号 | arm-core-registers, chip-architecture, stm32-hal-development |
-| 外设 | ADC, DAC, DMA, Timer, Watchdog | adc-module, dma-module, timer-module, watchdog-module |
-| 总线协议 | I²C, SPI, UART, USB, CAN | i2c-bus, spi-bus, uart-module, usb-module, can-debug |
-| 无线 | BLE, WiFi, LoRa, GPS, MQTT | ble-module, wifi-module, lora-module, gps-module, mqtt-module |
-| RTOS | FreeRTOS, 任务, 队列, 信号量 | freertos-module, rtos-debug |
-| 文件系统 | FATFS, SFUD, YMODEM | fatfs-module, sfud-module, ymodem-module |
-| 构建 | CMake, IAR, Keil, IDF, PlatformIO | build-cmake, build-iar, build-keil, build-idf, build-platformio |
-| 调试 | JLink, OpenOCD, GDB, RTT | flash-jlink, debug-gdb-openocd, rtt-monitor |
-| 安全 | AES, RSA, CRC, 签名, OTA | aes-module, rsa-module, firmware-sign, ota-update-system |
-| 分析 | Map 文件, Option Bytes, 编码规范 | map-analyzer, option-bytes, coding-standards |
+需求对齐层检测到嵌入式关键词时，从 SKILL_REGISTRY.md 中查找对应追问方向和关联 skill。新增 skill 只需在注册表中添加一行。
 
 ## Flagged ambiguities
 
