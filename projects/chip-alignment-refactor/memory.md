@@ -151,6 +151,33 @@
 | 2026-06-08 | settings.json 按 DeepSeek 官方文档配置 | 移除 effortLevel + MAX_THINKING_TOKENS 以兼容 subagent，加 [1m] 后缀启 1M 上下文 |
 | 2026-06-08 | agent-orchestration.js agent() 调用修复 | 参数格式错误：传对象而非字符串 → [[object Object]] |
 | 2026-06-08 | 已知 Bug：DeepSeek reasoning_effort + thinking:disabled 互斥 | 等待 DeepSeek 修复 #1397 后启用 CLAUDE_CODE_EFFORT_LEVEL |
+| 2026-06-08 | 记忆层 Layer 3 设计完成 | 参考 Hermes Agent 的 Provider/MemoryManager/MemoryTool 模式，适配 Workflow 脚本环境 |
+| 2026-06-08 | 记忆层 Workflow 实现 | memory-layer.js: 4 个 action (search/read/write/context)，YAML frontmatter 文件格式 |
+| 2026-06-08 | 记忆层集成编排层完成 | Phase 0: 记忆上下文注入 agent prompt；Phase 5: 执行摘要写回记忆 |
+| 2026-06-08 | DeepSeek API 400 修复 | 本地 HTTP 代理剥离 reasoning_effort + thinking:disabled，subagent 恢复可用 |
+| 2026-06-08 | 端到端链路测试通过 | 需求对齐层 → 编排层（17/17 tasks）→ 记忆层 Phase 0/5 完整链路验证成功 |
+| 2026-06-08 | 安全层设计与实现 | security-layer.js: 将 AGENTS.md 9 大规则体系编码为可编程安全护栏 — 预检/权限检查/高危确认/隐私过滤/审计/异常检测 |
+| 2026-06-08 | 安全层集成编排层 | Phase 0.5 安全预检 + prompt 规则注入 + Phase 2.5 审计记录 + 审查加强安全项 |
+| 2026-06-08 | 安全层增强: Override + Session + Hash 检测 | SecurityState 类、override 机制、AGENTS.md 变更检测 |
+| 2026-06-08 | 安全层实施完成 | 10 项任务全部完成，37/37 测试通过，四层架构部署就绪 |
+
+## 审计日志存储约定
+
+安全层的审计日志以 `audit-` 前缀写入记忆层，遵循以下约定：
+
+| 字段 | 约定 |
+|------|------|
+| 文件名 | `audit-<entry-id>.md`（如 `audit-sec-12345678-abcd.md`） |
+| 文件路径 | `~/.claude/projects/c--Users-zhang/memory/audit-*.md` |
+| `metadata.type` | `audit-log` |
+| `metadata.name` | `audit-<entry-id>` |
+| MEMORY.md 索引行 | `- [安全审计: <条目类型>](audit-<entry-id>.md) — <session ID>` |
+| 条目内容 | JSON 格式: `{ id, timestamp, session, entry: { type, task_id, status, ... } }` |
+
+检索方式：
+```
+Workflow({ name: 'memory-layer', args: { action: 'search', query: 'audit', type: 'audit-log' } })
+```
 
 ## 重构日志
 
@@ -168,9 +195,9 @@
   - [x] 需求对齐层设计完成（CONTEXT + UBIQUITOUS + ADR + 设计文档）
   - [x] Agent 编排层设计完成（DAG 调度 + 三层门禁 + 重试机制）
   - [x] 需求对齐层 + 编排层 workflow 脚本实现完成
-  - [ ] 重启后验证：settings 生效 + subagent 可运行
-  - [ ] 验证端到端链路（需求对齐层 → 编排层）
-  - [ ] 编排层完整运行（依赖图/并行分发/审查/验收）
+  - [x] 重启后验证：settings 生效 + subagent 可运行
+  - [x] 验证端到端链路（需求对齐层 → 编排层）
+  - [x] 编排层完整运行（依赖图/并行分发/审查/验收）
 ```
 
 ## 参考链接
