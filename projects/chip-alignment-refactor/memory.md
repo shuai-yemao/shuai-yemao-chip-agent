@@ -165,3 +165,30 @@
 - [技能仓库](skills/) — 本地 skill 文件
 - [设计文档](docs/superpowers/specs/2026-06-08-config-files-refactor-design.md)
 - [实施计划](docs/superpowers/plans/2026-06-08-config-files-refactor.md)
+
+## 维护计划
+
+### 每周 Review
+
+| 检查项 | 操作 | 频率 |
+|--------|------|:----:|
+| 过时条目 | 识别并删除不再适用的记忆 | 每周 |
+| 重复条目 | 合并内容重叠的记忆 | 每周 |
+| 决策记录 | 确认已有决策是否仍有效 | 每周 |
+| 记忆索引 | 检查所有文件路径是否可达 | 每周 |
+| 重构日志 | 清理已完成超过 30 天的日志项 | 每月 |
+
+Review 结果记入决策记录表。
+
+### Git 管理
+
+整个 `.claude/memory/` 目录和 `memory.md` 由 **git 管理**：
+
+- **每次变更** → `git add -A && git commit -m "memory: <变更摘要>"`
+- **提交信息格式**：`memory: <操作类型> — <内容摘要>`
+  - 新增: `memory: add — 项目目标记录`
+  - 更新: `memory: update — 决策记录表补充`
+  - 删除: `memory: remove — 过期知识条目`
+  - 合并: `memory: merge — 重复条目合并`
+- **回滚**：通过 `git revert` 或 `git checkout` 恢复旧版本
+- **diff 审查**：commit 前 `git diff` 检查变更内容
