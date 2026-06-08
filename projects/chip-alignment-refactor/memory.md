@@ -163,6 +163,7 @@
   - [x] Agent 系统设计启动
   - [x] 需求对齐层设计完成（CONTEXT + UBIQUITOUS + ADR + 设计文档）
   - [x] Agent 编排层设计完成（DAG 调度 + 三层门禁 + 重试机制）
+  - [x] 需求对齐层 + 编排层 workflow 脚本实现完成
 ```
 
 ## 参考链接
