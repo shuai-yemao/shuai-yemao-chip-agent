@@ -61,12 +61,24 @@
 ## Alignment Flow
 
 ```
-Step 1: 锚定方向 → 调 grill-me
-Step 2: 施工清单 → 调 to-issues
-        约束清单 → 调 grill-with-docs + ubiquitous-language
-        验收测试 + 现状确认 → 直接产出
-Step 3: 用户确认
-Step 4: to-prd + tdd + diagnose → 按清单执行 → handoff
+Step 1: 锚定方向
+        调 brainstorming → 逐问题澄清需求、约束、成功标准
+        产出：确认的方向与范围
+
+Step 2: 设计
+        写设计文档（spec）→ 架构、组件、数据流、边界
+        自审 + 用户审核
+        产出：审核通过的 spec
+
+Step 3: 计划
+        调 writing-plans → 拆解为可执行 Task
+        每个 Task 精确到文件路径、操作步骤、验收方法
+        产出：实施计划文档
+
+Step 4: 执行
+        调 executing-plans 或 subagent-driven-development
+        按 Task 清单逐项完成 → 验证 → 提交
+        handoff 收尾
 ```
 
 ## Boundaries
