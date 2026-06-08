@@ -27,7 +27,7 @@
   - [x] AGENTS.md → 扩展为完整行为守则
   - [x] CLAUDE.md → 精简为入口名片
   - [x] memory.md → 三合一
-  - [ ] 全局 ~/.claude/CLAUDE.md 清理
+  - [x] 全局 ~/.claude/CLAUDE.md 清理
 ```
 
 ## 参考链接
