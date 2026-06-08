@@ -62,23 +62,25 @@
 
 ```
 Step 1: 锚定方向
-        调 brainstorming → 逐问题澄清需求、约束、成功标准
+        调 grill-me → 逐层追问需求，走遍决策树每个分支，达成共识
         产出：确认的方向与范围
 
-Step 2: 设计
-        写设计文档（spec）→ 架构、组件、数据流、边界
-        自审 + 用户审核
-        产出：审核通过的 spec
+Step 2: 约束梳理
+        调 grill-with-docs + ubiquitous-language
+        → 对照领域模型挑战方案，精炼术语
+        → 更新 CONTEXT.md，产出 ADR
+        验收测试 + 现状确认 → 直接产出
+        产出：精炼后的术语表、ADR、验收标准
 
-Step 3: 计划
-        调 writing-plans → 拆解为可执行 Task
-        每个 Task 精确到文件路径、操作步骤、验收方法
-        产出：实施计划文档
+Step 3: 施工清单
+        调 to-issues → 拆解为垂直切片（tracer bullet）issue
+        每个切片贯穿所有集成层，可独立验证
+        产出：按依赖顺序排列的 issue 清单
 
 Step 4: 执行
-        调 executing-plans 或 subagent-driven-development
-        按 Task 清单逐项完成 → 验证 → 提交
-        handoff 收尾
+        按清单执行 → tdd（红-绿-重构循环）
+        diagnose（按需：复现 → 最小化 → 假设 → 修复 → 回归）
+        handoff 收尾 → 压缩上下文为交接文档
 ```
 
 ## Boundaries
