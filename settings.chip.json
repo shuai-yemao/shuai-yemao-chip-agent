@@ -1,0 +1,11 @@
+{
+  "env": {
+    "ANTHROPIC_BASE_URL": "http://localhost:17999",
+    "CLAUDE_CODE_SKIP_UPDATE_CHECK": "1",
+    "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "64000"
+  },
+  "enableWorkflows": true,
+  "skills": {
+    "directories": ["~/.claude/skills"]
+  }
+}
