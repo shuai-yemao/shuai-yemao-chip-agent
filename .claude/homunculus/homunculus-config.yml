@@ -1,0 +1,24 @@
+---
+enabled: true
+observation:
+  source: history.jsonl
+  batch_size: 100
+  tail_window: 200
+  min_content_length: 50
+analysis:
+  model: deepseek-v4-flash
+  cooldown_minutes: 15
+  min_observations_for_analysis: 10
+  max_instincts_per_analysis: 5
+confidence:
+  initial: 0.3
+  increment: 0.05
+  decrement: 0.02
+  bridge_threshold: 0.7
+evolution:
+  auto_bridge: true
+  bridge_type: reference
+reentry:
+  enabled: true
+  lock_file: .analysis-lock
+  lock_timeout_seconds: 300
