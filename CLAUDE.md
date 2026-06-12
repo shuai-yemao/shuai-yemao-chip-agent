@@ -107,6 +107,9 @@ Workflow({ name: 'safety-layer', args: { action: 'inject_rules', domain: 'embedd
 
 ```
 Workflow({ name: 'tool-layer', args: { action: 'list' } })
+Workflow({ name: 'tool-layer', args: { action: 'map' } })
+Workflow({ name: 'tool-layer', args: { action: 'map', category: '通信协议' } })
+Workflow({ name: 'tool-layer', args: { action: 'map', task: 'I2C' } })
 Workflow({ name: 'tool-layer', args: { action: 'install', source: 'git-url' } })
 Workflow({ name: 'tool-layer', args: { action: 'remove', name: 'skill-name' } })
 Workflow({ name: 'tool-layer', args: { action: 'update', name: 'skill-name' } })
