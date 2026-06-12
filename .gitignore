@@ -3,14 +3,106 @@
 # Whitelist gitignore itself
 !/.gitignore
 
-# Whitelist Claude config
+# Whitelist Claude config - 系统文件
 !/.claude/
 /.claude/*
 !/.claude/plans/
 !/.claude/plans/*.md
+!/.claude/plans/archive/
+!/.claude/plans/archive/*.md
+
+# Claude 核心文件
+!/.claude/SOUL.md
+!/.claude/AGENTS.md
+!/.claude/CLAUDE.md
+!/.claude/README.md
+!/.claude/USER.md
+
+# Agent 定义
+!/.claude/agents/
+/.claude/agents/*
+!/.claude/agents/*.md
+
+# Workflow 核心
+!/.claude/workflows/
+/.claude/workflows/*
+!/.claude/workflows/*.js
+!/.claude/workflows/domains/
+/.claude/workflows/domains/*
+!/.claude/workflows/domains/*.js
+!/.claude/workflows/__tests__/
+/.claude/workflows/__tests__/*
+!/.claude/workflows/__tests__/*.js
+!/.claude/workflows/__tests__/*.test.js
+
+# 记忆系统
+!/.claude/memory/
+/.claude/memory/*
+!/.claude/memory/*.md
+
+# Homunculus 持续学习
+!/.claude/homunculus/
+/.claude/homunculus/*
+!/.claude/homunculus/homunculus-config.yml
+!/.claude/homunculus/instincts/
+/.claude/homunculus/instincts/*
+!/.claude/homunculus/instincts/*.md
+!/.claude/homunculus/instincts/personal/
+/.claude/homunculus/instincts/personal/*
+!/.claude/homunculus/instincts/personal/*.md
+!/.claude/homunculus/instincts/projects/
+/.claude/homunculus/instincts/projects/*
+!/.claude/homunculus/instincts/projects/*.md
+!/.claude/homunculus/evolved/
+/.claude/homunculus/evolved/*
+!/.claude/homunculus/evolved/*.md
+!/.claude/homunculus/evolved/INDEX.md
+
+# 规则体系
+!/.claude/rules/
+/.claude/rules/*
+!/.claude/rules/INDEX.md
+!/.claude/rules/security/
+!/.claude/rules/workflow/
+!/.claude/rules/embedded/
+!/.claude/rules/privacy/
+
+# 排除敏感文件
+/.claude/.env.secrets
+/.claude/sessions/
+/.claude/settings.local.json
 
 # Whitelist OMC runtime
 !/.omc/
 /.omc/*
 !/.omc/scripts/
 !/.omc/tests/
+
+# Secrets & credentials (from remote)
+.env*
+*.secret
+settings.json
+
+# Runtime data (from remote)
+history.jsonl
+
+# Build artifacts (from remote)
+installer/Chip-System-Setup.exe
+installer/files/skills/
+*.log
+
+# OS files (from remote)
+.DS_Store
+Thumbs.db
+
+# Node (from remote)
+node_modules/
+
+# IDE (from remote)
+.idea/
+.vscode/
+*.swp
+
+# Python (from remote)
+__pycache__/
+*.pyc
