@@ -212,6 +212,42 @@ DAG 调度 + Skill 推荐 + 手动 TDD 流程管理。
 | safety-layer | verdict, risk_count, safe_text | — |
 | memory-layer | matches_count, source_count | — |
 
+### P3: ECC 持续学习 + 安全扫描
+
+| 组件 | 说明 | Workflow |
+|------|------|----------|
+| **Homunculus** | 从会话历史自动学习编码模式，生成本能 → 进化技能 | `homunculus-observer` |
+| **AgentShield** | 静态配置安全扫描，102 条规则覆盖 8 分类 | `agentshield-scanner` |
+
+**本能演进**: 0.3 → 0.5 → 0.7 → 0.85（达到阈值自动进化为技能）
+
+### P4: 专用 Agent + 领域扩展
+
+**专用 Agent**（通过 `claude --agent <name>` 启动）:
+
+| Agent | 用途 |
+|-------|------|
+| `embedded-expert` | 嵌入式开发专家（STM32/ESP32/RISC-V） |
+| `code-reviewer` | 代码审查专家（安全/性能/质量/架构） |
+| `test-runner` | 测试执行专家（217 项测试） |
+| `devops` | 运维专家（健康检查/备份/打包/部署） |
+
+**领域配置**:
+
+| 领域 | 用途 | 技能映射 |
+|------|------|---------|
+| `embedded` | 嵌入式开发 | 60+ 技能 |
+| `web` | Web 开发（React/Vue/Node.js） | 30+ 技能 |
+| `data` | 数据处理（Python/SQL/ETL/ML） | 30+ 技能 |
+
+**模型切换**:
+
+| 命令 | 模式 | 用途 |
+|------|------|------|
+| `claude` | mimo-v2.5 | 默认（国内直连） |
+| `claude-cherryin` | Claude 4.6 + 混搭 | 需要 Claude 能力时 |
+| `claude-deepseek` | DeepSeek v4 | 备用 |
+
 ---
 
 ## 工作流程
@@ -277,29 +313,55 @@ chip-system/
 ├── SOUL.md                # Chip 人格定义（session-start hook 注入）
 ├── AGENTS.md              # AI 行为守则（安全规则体系）
 ├── USER.md                # 用户信息与偏好
+├── README.md              # 仓库首页（本文）
 ├── config.json            # 默认配置模板
 │
-├── workflows/             # 六层 Workflow 脚本
-│   ├── requirements-alignment.js  ← 需求对齐层（含 chain + action_items）
-│   ├── safety-layer.js            ← 安全层
-│   ├── agent-orchestration.js     ← 编排层（含 chain.on_completion）
-│   ├── memory-layer.js            ← 记忆层
-│   ├── tool-layer.js              ← 工具层（含 map 技能分类）
-│   └── ops-layer.js               ← Ops 层
-│
-├── domains/               # 领域配置
-│   ├── embedded.js        # 嵌入式领域预检规则
-│   └── generic.js         # 通用领域预检规则
+├── .claude/               # Claude Code 配置目录
+│   ├── agents/            # 专用 Agent 定义
+│   │   ├── embedded-expert.md
+│   │   ├── code-reviewer.md
+│   │   ├── test-runner.md
+│   │   └── devops.md
+│   │
+│   ├── workflows/         # 核心 Workflow 脚本
+│   │   ├── requirements-alignment.js  ← 需求对齐层
+│   │   ├── safety-layer.js            ← 安全层（102 条规则）
+│   │   ├── agent-orchestration.js     ← 编排层
+│   │   ├── memory-layer.js            ← 记忆层
+│   │   ├── tool-layer.js              ← 工具层
+│   │   ├── ops-layer.js               ← Ops 层
+│   │   ├── homunculus-observer.js     ← Homunculus 持续学习
+│   │   ├── agentshield-scanner.js     ← AgentShield 安全扫描
+│   │   ├── agentshield-rules.js       ← AgentShield 规则库
+│   │   ├── domains/                   # 领域配置
+│   │   │   ├── embedded.js
+│   │   │   ├── web.js
+│   │   │   └── data.js
+│   │   └── __tests__/                 # 测试套件（217 项）
+│   │       ├── run-all-workflow-tests.js
+│   │       └── *.test.js
+│   │
+│   ├── homunculus/        # Homunculus 持续学习
+│   │   ├── instincts/     # 本能（6 个人物 + 2 个项目）
+│   │   ├── evolved/       # 进化技能（4 个）
+│   │   └── observations/  # 观察数据
+│   │
+│   ├── rules/             # 分层规则
+│   │   ├── security/
+│   │   ├── workflow/
+│   │   ├── embedded/
+│   │   └── privacy/
+│   │
+│   ├── memory/            # 持久记忆
+│   │   └── FACT.md
+│   │
+│   └── skills/            # 技能包（77+）
 │
 ├── hooks/                 # Claude Code 会话钩子
-│   └── session-start      # 自动注入 SOUL.md + AGENTS.md + 代理启动
+│   └── session-start      # 自动注入 SOUL.md + AGENTS.md
 │
 ├── bin/                   # 辅助脚本
-│   └── deepseek-proxy.js  # DeepSeek API 代理
-│
-├── installer/             # NSIS Windows 安装包
-│   ├── chip-installer.nsi
-│   └── build-installer.bat
+│   └── homunculus-hook.js # Homunculus PostCompact hook
 │
 ├── scripts/               # 安装脚本
 │   ├── setup.sh           # Unix / macOS / Linux
@@ -308,7 +370,6 @@ chip-system/
 ├── docs/                  # 文档
 │   └── CHIP.md
 │
-├── README.md              # 仓库首页（本文）
 ├── LICENSE                # MIT 许可
 └── .gitignore
 ```
@@ -342,12 +403,45 @@ Workflow({
 
 ## 使用方法
 
+### 专用 Agent
+
+```bash
+# 启动专用 Agent
+claude --agent embedded-expert    # 嵌入式开发
+claude --agent code-reviewer      # 代码审查
+claude --agent test-runner        # 测试执行
+claude --agent devops             # 运维
+```
+
+### 模型切换
+
+```bash
+claude                # 默认 mimo 模式（国内直连）
+claude-cherryin       # CherryIn 模式（Claude 4.6 + 混搭）
+claude-deepseek       # DeepSeek 模式
+```
+
 ### 安全层
 
 ```
 Workflow({ name: 'safety-layer', args: { action: 'preflight', task: { name: '操作', files: ['.env'] }, domain: 'embedded' } })
 Workflow({ name: 'safety-layer', args: { action: 'audit', entry: { type: '已完成', ... } } })
 Workflow({ name: 'safety-layer', args: { action: 'filter', text: '含敏感信息的文本' } })
+```
+
+### AgentShield 安全扫描
+
+```
+Workflow({ name: 'agentshield-scanner', args: { action: 'scan', scope: 'all' } })
+Workflow({ name: 'agentshield-scanner', args: { action: 'scan', scope: 'keys' } })
+```
+
+### Homunculus 持续学习
+
+```
+Workflow({ name: 'homunculus-observer', args: { action: 'status' } })
+Workflow({ name: 'homunculus-observer', args: { action: 'capture' } })
+Workflow({ name: 'homunculus-observer', args: { action: 'analyze' } })
 ```
 
 ### 记忆操作
@@ -376,6 +470,16 @@ Workflow({ name: 'ops-layer', args: { action: 'backup' } })
 Workflow({ name: 'ops-layer', args: { action: 'restore', from: 'path/to/backup.tar.gz', dryRun: true } })
 Workflow({ name: 'ops-layer', args: { action: 'doctor' } })
 Workflow({ name: 'ops-layer', args: { action: 'prune', days: 30 } })
+```
+
+### 测试
+
+```bash
+# 运行全部测试（217 项）
+node ~/.claude/workflows/__tests__/run-all-workflow-tests.js
+
+# 运行单个测试
+node ~/.claude/workflows/__tests__/run-all-workflow-tests.js --file safety-layer.test.js
 ```
 
 ---
