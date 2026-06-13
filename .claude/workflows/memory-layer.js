@@ -7,6 +7,10 @@
 //   Workflow({ scriptPath: '.claude/workflows/memory-layer.js', args: { action: 'read', name: 'project-goal' } })
 //   Workflow({ scriptPath: '.claude/workflows/memory-layer.js', args: { action: 'write', name: 'xxx', description: '...', type: 'decision', content: '...' } })
 //   Workflow({ scriptPath: '.claude/workflows/memory-layer.js', args: { action: 'context', for: '当前任务描述...' } })
+//   Workflow({ scriptPath: '.claude/workflows/memory-layer.js', args: { action: 'vector_search', query: '嵌入式系统' } })
+//   Workflow({ scriptPath: '.claude/workflows/memory-layer.js', args: { action: 'add_to_vector', name: 'xxx', content: '...' } })
+
+import { VectorStore } from './vector-store.js'
 
 export const meta = {
   name: 'memory-layer',
@@ -368,6 +372,135 @@ else if (action === 'context') {
   }
 }
 
+// --- Vector Search ---
+else if (action === 'vector_search') {
+  phase('Phase 1.5: 向量检索')
+  log(`向量检索: "${query}" (topK=${args.topK || 5})`)
+
+  const vectorStorePath = `${MEMORY_DIR}/vector-store.json`
+  const topK = args.topK || 5
+
+  // 检查向量存储文件是否存在
+  const fs = require('fs')
+  if (!fs.existsSync(vectorStorePath)) {
+    log('向量存储文件不存在，返回空结果')
+    result = { matches: [], total: 0 }
+  } else {
+    // 使用 VectorStore 进行语义检索
+    const vectorSearchResult = await agent(
+      `你是向量检索 agent。你的任务是：
+
+1. 读取向量存储文件: ${vectorStorePath}
+2. 使用 cosine similarity 检索与 "${query}" 最相关的 ${topK} 个条目
+3. 返回检索结果，包含 id, text, metadata, score
+
+向量存储格式:
+{
+  "dimension": 256,
+  "items": [
+    {
+      "id": "string",
+      "text": "string",
+      "metadata": {},
+      "vector": [0.1, 0.2, ...]
+    }
+  ]
+}
+
+对查询文本 "${query}" 生成向量嵌入（使用相同的 hash 方法），然后计算与所有存储向量的 cosine similarity。
+
+返回格式: { matches: [{ id, text, metadata, score }], total: number }`,
+      { schema: MEMORY_INDEX_SCHEMA, label: '向量语义检索' }
+    )
+
+    if (vectorSearchResult?.matches?.length) {
+      log(`向量检索找到 ${vectorSearchResult.matches.length} 个匹配`)
+    } else {
+      log('向量检索未找到匹配')
+    }
+    result = vectorSearchResult || { matches: [], total: 0 }
+  }
+}
+
+// --- Add to Vector Store ---
+else if (action === 'add_to_vector') {
+  phase('Phase 1.5: 添加到向量存储')
+  log(`添加到向量存储: ${name}`)
+
+  const vectorStorePath = `${MEMORY_DIR}/vector-store.json`
+  const fs = require('fs')
+
+  // 读取或创建向量存储
+  let vectorStore = { dimension: 256, items: [] }
+  if (fs.existsSync(vectorStorePath)) {
+    try {
+      vectorStore = JSON.parse(fs.readFileSync(vectorStorePath, 'utf8'))
+    } catch (e) {
+      log(`⚠️ 读取向量存储失败: ${e.message}`)
+    }
+  }
+
+  // 检查是否已存在
+  const existingIndex = vectorStore.items.findIndex(item => item.id === name)
+  if (existingIndex >= 0) {
+    log(`更新已存在的条目: ${name}`)
+    vectorStore.items[existingIndex] = {
+      id: name,
+      text: content,
+      metadata: { type: type || 'reference', description: description || name },
+      vector: [] // 向量会在检索时生成
+    }
+  } else {
+    log(`添加新条目: ${name}`)
+    vectorStore.items.push({
+      id: name,
+      text: content,
+      metadata: { type: type || 'reference', description: description || name },
+      vector: [] // 向量会在检索时生成
+    })
+  }
+
+  // 保存向量存储
+  try {
+    fs.writeFileSync(vectorStorePath, JSON.stringify(vectorStore, null, 2), 'utf8')
+    log(`✅ 已保存到向量存储: ${vectorStorePath}`)
+    result = { success: true, file: vectorStorePath, total: vectorStore.items.length }
+  } catch (e) {
+    log(`❌ 保存失败: ${e.message}`)
+    result = { success: false, error: e.message }
+  }
+}
+
+// --- List Vector Store ---
+else if (action === 'list_vector') {
+  phase('Phase 1.5: 列出向量存储')
+  log('列出向量存储')
+
+  const vectorStorePath = `${MEMORY_DIR}/vector-store.json`
+  const fs = require('fs')
+
+  if (!fs.existsSync(vectorStorePath)) {
+    log('向量存储文件不存在')
+    result = { items: [], total: 0 }
+  } else {
+    try {
+      const vectorStore = JSON.parse(fs.readFileSync(vectorStorePath, 'utf8'))
+      log(`向量存储包含 ${vectorStore.items.length} 个条目`)
+      result = {
+        items: vectorStore.items.map(item => ({
+          id: item.id,
+          text: item.text,
+          metadata: item.metadata,
+        })),
+        total: vectorStore.items.length,
+      }
+    } catch (e) {
+      log(`❌ 读取失败: ${e.message}`)
+      result = { items: [], total: 0, error: e.message }
+    }
+  }
+}
+
 // --- Help ---
 else if (action === 'help' || action === '') {
   log('记忆层 Workflow — 可用的 actions:')
@@ -389,6 +522,15 @@ else if (action === 'help' || action === '') {
   log('  context for=<任务描述>')
   log('    检索相关记忆并格式化为可注入 agent prompt 的上下文块')
   log('')
+  log('  vector_search  query=<查询文本>  [topK=<返回数量>]')
+  log('    语义向量检索，使用 cosine similarity 找到最相关的记忆')
+  log('')
+  log('  add_to_vector  name=<条目ID>  content=<文本>  [type=<类型>]  [description=<描述>]')
+  log('    添加条目到向量存储（用于语义检索）')
+  log('')
+  log('  list_vector')
+  log('    列出向量存储中的所有条目')
+  log('')
   log('示例:')
   log('  Workflow({ name: "memory-layer", args: { action: "search", query: "I2C" } })')
   log('  Workflow({ name: "memory-layer", args: { action: "list", type: "project" } })')
@@ -396,10 +538,13 @@ else if (action === 'help' || action === '') {
   log('  Workflow({ name: "memory-layer", args: { action: "write", name: "new-note", description: "...", type: "reference", content: "..." } })')
   log('  Workflow({ name: "memory-layer", args: { action: "write", name: "bug-fix", content: "...", symbols: ["timer_init", "led_set_mode"] } })')
   log('  Workflow({ name: "memory-layer", args: { action: "context", for: "当前任务描述" } })')
+  log('  Workflow({ name: "memory-layer", args: { action: "vector_search", query: "嵌入式系统", topK: 5 } })')
+  log('  Workflow({ name: "memory-layer", args: { action: "add_to_vector", name: "i2c-guide", content: "I2C 协议详解", type: "reference" } })')
+  log('  Workflow({ name: "memory-layer", args: { action: "list_vector" } })')
 
   result = {
     help: true,
-    actions: ['search', 'list', 'read', 'write', 'context'],
+    actions: ['search', 'list', 'read', 'write', 'context', 'vector_search', 'add_to_vector', 'list_vector'],
     examples: {
       search: { action: 'search', query: 'I2C' },
       list: { action: 'list', type: 'project' },
@@ -407,6 +552,9 @@ else if (action === 'help' || action === '') {
       write: { action: 'write', name: 'new-note', description: '摘要', type: 'reference', content: '正文内容' },
       write_with_symbols: { action: 'write', name: 'bug-fix', content: '正文', symbols: ['timer_init', 'led_set_mode'] },
       context: { action: 'context', for: '当前任务描述' },
+      vector_search: { action: 'vector_search', query: '嵌入式系统', topK: 5 },
+      add_to_vector: { action: 'add_to_vector', name: 'i2c-guide', content: 'I2C 协议详解', type: 'reference' },
+      list_vector: { action: 'list_vector' },
     },
   }
 }

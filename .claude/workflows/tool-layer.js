@@ -281,7 +281,6 @@ const SKILL_CATEGORIES = [
       { name: '打包部署', skills: [
         { name: 'firmware-sign', desc: 'ECDSA/RSA 签名/加密' },
         { name: 'ota-package', desc: '全量/差分/分段 OTA 打包' },
-        { name: 'agent-packager', desc: 'Agent Package 标准化打包/分发' },
       ]},
       { name: '硬件通信', skills: [
         { name: 'pcb-analysis', desc: 'LCEDA Pro 原理图 BOM/电源树/引脚/网络/DRC' },
