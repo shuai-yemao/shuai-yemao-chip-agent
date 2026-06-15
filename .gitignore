@@ -67,6 +67,11 @@
 !/.claude/rules/embedded/
 !/.claude/rules/privacy/
 
+# 参考文档（按需加载）
+!/.claude/reference/
+/.claude/reference/*
+!/.claude/reference/*.md
+
 # 排除敏感文件
 /.claude/.env.secrets
 /.claude/sessions/
